@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="pt" >
+<head>
+    <title>Happily - Descomplique seu happy hour</title>
+    <meta charset="UTF-8">
+    <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+    <link href="https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900|Material+Icons" rel="stylesheet">
+    <link href="https://use.fontawesome.com/releases/v5.0.13/css/all.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/vuetify/dist/vuetify.min.css" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, minimal-ui">
+</head>
+<body>
+<div id="app">
+    <v-app>
+        <v-content>
+            <v-toolbar color="amber darken-1">
+                <v-icon>fa-beer</v-icon>
+                <v-toolbar-title>Happily</v-toolbar-title>
+                <v-spacer></v-spacer>
+                <v-btn v-if="beerPrice" @click="showAddModal = true" icon>
+                    <v-icon>add</v-icon>
+                </v-btn>
+                <v-btn icon @click="showHelpModal = true"><v-icon>help</v-icon></v-btn>
+            </v-toolbar>
+            <v-container>
+
+                <v-layout row wrap>
+                    <v-flex xs12>
+                        <v-text-field v-model="beerPrice" label="Cerveja" placeholder="Preço da cerveja" type="number"
+                                      prefix="R$" clearable></v-text-field>
+                    </v-flex>
+                </v-layout>
+
+                <v-layout row wrap>
+                    <v-flex xs5>
+                        <v-switch v-model="includeCover" label="Couvert"></v-switch>
+                    </v-flex>
+                    <v-flex xs7>
+                        <v-text-field v-if="includeCover" v-model="coverPrice" label="Couvert" type="number" clearable
+                                      placeholder="Valor do couvert" prefix="R$"></v-text-field>
+                    </v-flex>
+                </v-layout>
+
+                <v-layout row wrap>
+                    <v-flex xs5>
+                        <v-switch v-model="includeService" label="Serviço"></v-switch>
+                    </v-flex>
+                    <v-flex xs7>
+                        <v-text-field v-if="includeService" v-model="serviceTipPercentage" label="Taxa de Serviço (%)"
+                                      type="number" min="0" step="0.01" placeholder="Porcentagem" suffix="%" clearable>
+                        </v-text-field>
+                    </v-flex>
+                </v-layout>
+
+                <v-layout row wrap v-for="(person, index) in $store.getters.sortedPeople" mb-2 :key="index">
+                    <v-flex xs12>
+                        <v-card color="primary" class="white--text">
+                            <v-card-title primary-title>
+                                <div>
+                                    <span class="display-1">
+                                        {{ person }}
+                                    </span>
+                                </div>
+                                <v-spacer></v-spacer>
+                                <v-btn color="error" icon small @click="removePerson(person)">
+                                    <v-icon>remove</v-icon>
+                                </v-btn>
+                            </v-card-title>
+                            <v-card-text>
+                                <v-layout row wrap>
+                                    <v-icon x-large color="white" class="mr-2">fa-beer</v-icon>
+                                    <span class="display-2">
+                                        {{ consumptions[person] }}
+                                    </span>
+                                </v-layout>
+                                <v-layout row wrap>
+                                    <span class="display-2">{{ total(person) }}</span>
+                                </v-layout>
+                            </v-card-text>
+                            <v-card-actions>
+                                <v-btn flat dark @click="decrementConsumption(person)">
+                                    Errei
+                                </v-btn>
+                                <v-spacer></v-spacer>
+                                <v-btn flat dark @click="incrementConsumption(person)">
+                                    Bebeu
+                                </v-btn>
+                            </v-card-actions>
+                        </v-card>
+                    </v-flex>
+                    <v-divider color="white"></v-divider>
+                </v-layout>
+
+                <v-layout v-if="$store.getters.existConsumptions" row wrap>
+                    <v-flex xs12>
+                        <apexchart type="donut" :options="chartOptions" :series="Object.values(consumptions)"></apexchart>
+                    </v-flex>
+                </v-layout>
+
+                <v-dialog v-model="showAddModal" persistent>
+                    <v-card>
+                        <v-card-title class="headline">Adicionar pessoa</v-card-title>
+                        <form>
+                            <v-card-text>
+                                <v-text-field v-model="personName" label="Nome da pessoa" placeholder="Nome da pessoa"
+                                              clearable required @keyup.enter="addPerson"
+                                              :error-messages="$v.personName.$dirty && !$v.personName.required ? ['É necessário informar o nome da pessoa'] : !$v.personName.isNotAdded ? ['Essa pessoa já está na lista'] : []"
+                                              :error="$v.personName.$error"
+                                              :success="!$v.personName.$error" @input="$v.personName.$touch()"
+                                              @blur="$v.personName.$touch()">
+                                </v-text-field>
+                            </v-card-text>
+                            <v-card-actions>
+                                <v-btn flat @click="cancelAddPerson">Cancelar</v-btn>
+                                <v-spacer></v-spacer>
+                                <v-btn flat dark small color="success" :disabled="$v.personName.$error"
+                                       @click="addPerson">
+                                    Adicionar
+                                </v-btn>
+                            </v-card-actions>
+                        </form>
+                    </v-card>
+                </v-dialog>
+
+                <v-dialog v-model="showHelpModal">
+                    <v-card>
+                        <v-card-title class="headline">Sobre o Happily</v-card-title>
+                            <v-card-text>
+                                <p>
+                                    O Happily surgiu depois de muito tempo perdido ao final de vários happy hours,
+                                    quando se divide a conta e o raciocínio já não é o mesmo.
+                                </p>
+                                <p>
+                                    A ideia principal é manter um controle de quanto cada pessoa bebeu e quanto cada um
+                                    deve pagar ao final.
+                                </p>
+                                <p>
+                                    O jeito de usar é simples: é só definir o preço da cerveja que dois botões irão ser
+                                    exibidos, um na barra lá em cima e outro no canto inferior direito.
+                                </p>
+                                <p>
+                                    Clicando neles, você pode adicionar as pessoas para começar a rastrear o consumo.
+                                </p>
+                                <p>
+                                    Você pode  definir também se todos devem pagar o couvert e/ou taxa de serviço.
+                                </p>
+                            </v-card-text>
+                            <v-card-actions class="justify-center">
+                                <v-btn flat @click="showHelpModal = false">Fechar</v-btn>
+                            </v-card-actions>
+                    </v-card>
+                </v-dialog>
+            </v-container>
+
+            <v-btn v-if="beerPrice" dark fab fixed right bottom color="success" @click="showAddModal = true">
+                <v-icon>add</v-icon>
+            </v-btn>
+
+            <v-footer app class="pa-3">
+                <v-btn icon href="https://github.com/jpmoura/happily">
+                    <i class="fab fa-github"></i>
+                </v-btn>
+                <v-btn icon href="https://www.linkedin.com/in/mourajp/">
+                    <i class="fab fa-linkedin"></i>
+                </v-btn>
+
+                <v-spacer></v-spacer>
+
+                <div>{{ new Date().getFullYear() }}</div>
+            </v-footer>
+        </v-content>
+    </v-app>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/vuetify/dist/vuetify.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.10/lodash.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/vuex-persist"></script>
+<script src="https://unpkg.com/vuex@3.1.0/dist/vuex.js"></script>
+<script src="https://unpkg.com/vuelidate/dist/vuelidate.min.js"></script>
+<script src="https://unpkg.com/vuelidate/dist/validators.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+<script src="https://cdn.jsdelivr.net/npm/vue-apexcharts"></script>
+<script src="store/state.js" type="module"></script>
+<script src="store/mutations.js" type="module"></script>
+<script type="module">
+    import state from './store/state.js'
+    import mutations from './store/mutations.js'
+    import getters from './store/getters.js'
+
+    const { required } = window.validators
+
+    Vue.use(Vuex)
+    Vue.use(window.vuelidate.default)
+    Vue.use(VueApexCharts)
+    Vue.use(Vuetify, {
+        iconfont: 'fa' // 'md' || 'mdi' || 'fa' || 'fa4'
+    })
+
+    // Vue Apexcharts default component
+    Vue.component('apexchart', VueApexCharts)
+
+    // Persist the app state in the browser
+    const vuexLocal = new window.VuexPersistence.VuexPersistence({
+        storage: window.localStorage,
+    });
+
+    // Creates the Vuex store
+    const store = new Vuex.Store({
+        state: state,
+        mutations,
+        getters,
+        plugins: [vuexLocal.plugin]
+    })
+
+    /**
+     * Validator to add a person in consumptions object
+     * @param person {string} Entry name
+     * @returns {boolean} The entry's name if it exists in the object, undefined otherwise
+     */
+    function isNotAdded(person) {
+        let entries = Object.keys(this.consumptions)
+        return !entries.find(item => { return item === person })
+    }
+
+    /**
+     * Checks if a variable is null or empty
+     * @param {int,string} variable The variable that will be checked
+     * @returns {boolean} True if it is null or empty, false otherwise
+     */
+    function nullOrEmpty(variable) {
+        return variable === null || variable === ""
+    }
+
+    new Vue({
+        el: '#app',
+        store,
+        computed: {
+            ...Vuex.mapState(['consumptions']),
+            beerPrice: {
+                get () { return this.$store.state.beerPrice },
+                set (val) { this.$store.commit('setBeerPrice', val) }
+            },
+            chartOptions: function() {
+                return {
+                    chart: {
+                        id: 'vuechart-consumo'
+                    },
+                    title: {
+                        text: "Distribuição do Consumo"
+                    },
+                    labels: this.$store.getters.chartPeople
+                }
+            },
+            coverPrice: {
+                get () { return this.$store.state.coverPrice },
+                set (val) { this.$store.commit('setCoverPrice', val) }
+            },
+            includeCover: {
+                get () { return this.$store.state.includeCover },
+                set (val) { this.$store.commit('toggleCover', val) }
+            },
+            includeService: {
+                get () { return this.$store.state.includeService },
+                set (val) { this.$store.commit('toggleService', val) }
+            },
+            personName: {
+                get () { return this.$store.state.personName },
+                set (val) { this.$store.commit('setPersonName', val) }
+            },
+            series: function () { return this.$store.getters.chartData },
+            serviceTipPercentage: {
+                get () { return this.$store.state.serviceTipPercentage },
+                set (val) { this.$store.commit('setServiceTipPercentage', val) }
+            },
+            showAddModal: {
+                get () { return this.$store.state.showAddModal },
+                set (val) { this.$store.commit('toggleAddModal', val) }
+            },
+            showHelpModal: {
+                get () { return this.$store.state.showHelpModal },
+                set (val) { this.$store.commit('toggleHelpModal', val) }
+            }
+        },
+        methods: {
+            addPerson: function () {
+                this.$v.personName.$touch()
+                if(!this.$v.personName.$invalid) {
+                    this.$store.commit('addPerson', this.personName)
+                    this.$store.commit('setPersonName', null)
+                    this.$store.commit('toggleAddModal', false)
+                    this.$v.personName.$reset()
+                }
+            },
+            cancelAddPerson: function() {
+                this.$v.personName.$reset()
+                this.$store.commit('setPersonName', null)
+                this.$store.commit('toggleAddModal', false)
+            },
+            incrementConsumption: function (person) { this.$store.commit('incrementConsumption', person) },
+            decrementConsumption: function (person) { this.$store.commit('decrementConsumption', person) },
+            removePerson: function (person) { this.$store.commit('removePerson', person) },
+            total: function (person) {
+                let total = 0
+
+                if(!nullOrEmpty(this.beerPrice))
+                    total = this.consumptions[person] * this.beerPrice
+                if(this.includeService && !nullOrEmpty(this.serviceTipPercentage))
+                    total *= 1 + (this.serviceTipPercentage / 100)
+                if(this.includeCover && !nullOrEmpty(this.coverPrice))
+                    total += parseInt(this.coverPrice)
+
+                return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(total)
+            }
+        },
+        validations: {
+            personName: { required, isNotAdded }
+        }
+    })
+</script>
+</body>
+</html>
