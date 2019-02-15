@@ -26,7 +26,7 @@ Existem opções para adicionar o preço de possíveis couvert e taxa de
 serviço (gorjeta). Definindo esses parâmetros, o preço é ajustado
 automaticamente, já considerando o que foi definido pelo usuário.
 
-# Instalação
+## Instalação
 Você pode servir essa aplicação em um simples servidor HTTP. Foram
 usados CDNs para todas as bibliotecas, ou seja, NodeJS não foi utilizado
 diretamente e não é requirido para servir a aplicação.
@@ -34,7 +34,7 @@ diretamente e não é requirido para servir a aplicação.
 Como exemplo, existe uma instância que é servida pelo próprio GitHub,
 através do [GitHub Pages](https://jpmoura.github.io/happily/).
 
-# Dependências
+## Dependências
 
 Como o intuito é que essa aplicação seja capaz de executar em qualquer
 dispositivo móvel, ela foi desenvolvida como uma 
