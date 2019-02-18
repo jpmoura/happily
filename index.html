@@ -205,6 +205,7 @@
     // Persist the app state in the browser
     const vuexLocal = new window.VuexPersistence.VuexPersistence({
         storage: window.localStorage,
+        key: 'happily'
     });
 
     // Creates the Vuex store
