@@ -58,24 +58,24 @@
                         <v-card color="primary" class="white--text">
                             <v-card-title primary-title>
                                 <div>
-                                    <span class="display-1">
+                                    <span class="display-1 white--text">
                                         {{ person }}
                                     </span>
                                 </div>
                                 <v-spacer></v-spacer>
-                                <v-btn color="error" icon small @click="removePerson(person)">
+                                <v-btn dark icon small @click="removePerson(person)">
                                     <v-icon>remove</v-icon>
                                 </v-btn>
                             </v-card-title>
                             <v-card-text>
                                 <v-layout row wrap>
                                     <v-icon x-large color="white" class="mr-2">fa-beer</v-icon>
-                                    <span class="display-2">
+                                    <span class="display-2 white--text">
                                         {{ consumptions[person] }}
                                     </span>
                                 </v-layout>
                                 <v-layout row wrap>
-                                    <span class="display-2">{{ total(person) }}</span>
+                                    <span class="display-2 white--text">{{ total(person) }}</span>
                                 </v-layout>
                             </v-card-text>
                             <v-card-actions>
@@ -191,13 +191,12 @@
     import getters from './store/getters.js'
 
     const { required } = window.validators
+    const vuetifyOptions = {}
 
     Vue.use(Vuex)
     Vue.use(window.vuelidate.default)
     Vue.use(VueApexCharts)
-    Vue.use(Vuetify, {
-        iconfont: 'fa' // 'md' || 'mdi' || 'fa' || 'fa4'
-    })
+    Vue.use(Vuetify)
 
     // Vue Apexcharts default component
     Vue.component('apexchart', VueApexCharts)
@@ -237,6 +236,7 @@
 
     new Vue({
         el: '#app',
+        vuetify: new Vuetify(vuetifyOptions),
         store,
         computed: {
             ...Vuex.mapState(['consumptions']),
