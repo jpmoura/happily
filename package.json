@@ -1,6 +1,7 @@
 {
   "name": "happily",
-  "version": "1.0.0",
+  "version": "1.0.1",
+  "homepage": ".",
   "private": true,
   "dependencies": {
     "@fontsource/roboto": "^4.4.5",
