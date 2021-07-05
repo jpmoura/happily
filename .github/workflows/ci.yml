@@ -8,6 +8,9 @@ on:
     paths:
       - ".github/workflows/ci.yml"
       - "src/**"
+      - "package.json"
+      - "tsconfig.json"
+      - "sonar-project.properties"
   pull_request:
     types: [opened, synchronize, reopened]
     branches:
@@ -16,6 +19,9 @@ on:
     paths:
       - ".github/workflows/ci.yml"
       - "src/**"
+      - "package.json"
+      - "tsconfig.json"
+      - "sonar-project.properties"
 
 jobs:
   sonarcloud:
